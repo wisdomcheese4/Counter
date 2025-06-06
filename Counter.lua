@@ -1,6 +1,6 @@
 _addon.name = 'Counter'
 _addon.author = 'wisdomcheese4'
-_addon.version = '4.4'
+_addon.version = '1.0'
 _addon.commands = {'counter', 'cnt'}
 
 -- Import necessary libraries
