@@ -1,6 +1,6 @@
 _addon.name = 'Counter'
 _addon.author = 'wisdomcheese4'
-_addon.version = '1.0'
+_addon.version = '1.0.1'
 _addon.commands = {'counter', 'cnt'}
 
 -- Import necessary libraries
@@ -30,9 +30,8 @@ local personal_items = {}
 local personal_counts = {}
 local personal_drop_times = {}
 
--- Track messages we've already processed to avoid duplicates
-local processed_messages = {}
-local message_cleanup_time = 0
+-- New table to track recent increments
+local recent_increments = {}  -- Stores {amount = X, time = os.time()} for each item
 
 -- Get player name
 local function get_player_name()
@@ -143,12 +142,12 @@ local function update_display()
         end
     end
     
-    -- Add some padding
-    local column_width = max_item_len + 4
+    -- Add minimal padding
+    local column_width = max_item_len + 1
     
     -- Build display text with color codes
     local text = '\\cs(255,255,255)Item Counter:\\cr\n'
-    text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width) .. '\\cr\n'
+    text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width + 8) .. '\\cr\n'
     
     -- Show player name if available
     if player_name then
@@ -161,10 +160,10 @@ local function update_display()
     local gil_color = auto_add_gil and '\\cs(0,255,0)' or '\\cs(255,0,0)'
     
     text = text .. '\\cs(255,255,255)Auto-add:\\cr\n'
-    text = text .. string.format('\\cs(255,255,255)%-' .. (column_width - 3) .. 's', '  Drop:') .. drop_color .. (auto_add_drop and 'ON' or 'OFF') .. '\\cr\n'
-    text = text .. string.format('\\cs(255,255,255)%-' .. (column_width - 3) .. 's', '  Personal:') .. personal_color .. (auto_add_personal and 'ON' or 'OFF') .. '\\cr\n'
-    text = text .. string.format('\\cs(255,255,255)%-' .. (column_width - 3) .. 's', '  Gil:') .. gil_color .. (auto_add_gil and 'ON' or 'OFF') .. '\\cr\n'
-    text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width) .. '\\cr\n'
+    text = text .. string.format('\\cs(255,255,255)%-' .. (column_width - 7) .. 's', ' Drop:') .. drop_color .. (auto_add_drop and 'ON' or 'OFF') .. '\\cr\n'
+    text = text .. string.format('\\cs(255,255,255)%-' .. (column_width - 7) .. 's', ' Personal:') .. personal_color .. (auto_add_personal and 'ON' or 'OFF') .. '\\cr\n'
+    text = text .. string.format('\\cs(255,255,255)%-' .. (column_width - 7) .. 's', ' Gil:') .. gil_color .. (auto_add_gil and 'ON' or 'OFF') .. '\\cr\n'
+    text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width + 8) .. '\\cr\n'
     
     -- Item Drops section (moved before Gil)
     text = text .. '\\cs(255,255,255)Item Drops:\\cr\n'
@@ -195,15 +194,30 @@ local function update_display()
                 end
             end
             
-            -- Use string.format to ensure exact positioning
-            text = text .. color_start .. string.format('%-' .. (column_width - 4) .. 's%4d', item_name, count) .. '\\cr\n'
+            -- Check for recent increment to show
+            local increment_text = ""
+            if recent_increments[item_name] then
+                local time_since_increment = current_time - recent_increments[item_name].time
+                if time_since_increment <= GREEN_DURATION then
+                    increment_text = "(+" .. recent_increments[item_name].amount .. ")"
+                else
+                    -- Clean up old entries
+                    recent_increments[item_name] = nil
+                end
+            end
+            
+            -- Format with fixed positions
+            local base_text = string.format('%-' .. column_width .. 's', item_name)
+            local right_section = string.format('%6s%3d', increment_text, count)  -- Reduced from 7,4 to 6,3
+            
+            text = text .. color_start .. base_text .. right_section .. '\\cr\n'
         end
     else
         text = text .. '\\cs(255,255,255)No items tracked\\cr\n'
     end
     
     -- Personal Drops section
-    text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width) .. '\\cr\n'
+    text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width + 8) .. '\\cr\n'
     text = text .. '\\cs(255,255,255)Personal Drops:\\cr\n'
     
     -- Create a sorted list of personal items
@@ -220,8 +234,9 @@ local function update_display()
         for _, item_name in ipairs(sorted_personal) do
             local count = personal_counts[item_name] or 0
             
-            -- Check if this item should be green
+            -- Determine color based on item type and time
             local color_start = '\\cs(255,255,255)'  -- Default white
+            
             if personal_drop_times[item_name] then
                 local time_since_drop = current_time - personal_drop_times[item_name]
                 if time_since_drop <= GREEN_DURATION then
@@ -229,11 +244,35 @@ local function update_display()
                 else
                     -- Clean up old entries
                     personal_drop_times[item_name] = nil
+                    -- Check if it's a key item - use blue instead of white
+                    if item_name:find("^Key Item:") then
+                        color_start = '\\cs(0,150,255)'  -- Blue for key items
+                    end
+                end
+            else
+                -- Check if it's a key item even when not recently dropped
+                if item_name:find("^Key Item:") then
+                    color_start = '\\cs(0,150,255)'  -- Blue for key items
                 end
             end
             
-            -- Use same formatting as drop items for consistent alignment
-            text = text .. color_start .. string.format('%-' .. (column_width - 4) .. 's%4d', item_name, count) .. '\\cr\n'
+            -- Check for recent increment to show
+            local increment_text = ""
+            if recent_increments[item_name] then
+                local time_since_increment = current_time - recent_increments[item_name].time
+                if time_since_increment <= GREEN_DURATION then
+                    increment_text = "(+" .. recent_increments[item_name].amount .. ")"
+                else
+                    -- Clean up old entries
+                    recent_increments[item_name] = nil
+                end
+            end
+            
+            -- Format with fixed positions
+            local base_text = string.format('%-' .. column_width .. 's', item_name)
+            local right_section = string.format('%6s%3d', increment_text, count)  -- Reduced from 7,4 to 6,3
+            
+            text = text .. color_start .. base_text .. right_section .. '\\cr\n'
         end
     else
         text = text .. '\\cs(255,255,255)No personal drops\\cr\n'
@@ -242,7 +281,7 @@ local function update_display()
     -- Gil section last (always show if any gil obtained)
     local gil = item_counts["Gil"] or 0
     if gil > 0 then
-        text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width) .. '\\cr\n'
+        text = text .. '\\cs(255,255,255)' .. string.rep('─', column_width + 8) .. '\\cr\n'
         local color_start = '\\cs(255,255,255)'  -- Default white
         if item_drop_times["Gil"] then
             local time_since_drop = os.time() - item_drop_times["Gil"]
@@ -250,10 +289,42 @@ local function update_display()
                 color_start = '\\cs(0,255,0)'  -- Green
             end
         end
-        text = text .. color_start .. string.format('%-' .. (column_width - 4) .. 's%4d', 'Gil:', gil) .. '\\cr\n'
+        
+        -- Check for recent gil increment
+        local increment_text = ""
+        if recent_increments["Gil"] then
+            local time_since_increment = os.time() - recent_increments["Gil"].time
+            if time_since_increment <= GREEN_DURATION then
+                increment_text = "(+" .. recent_increments["Gil"].amount .. ")"
+            else
+                recent_increments["Gil"] = nil
+            end
+        end
+        
+        -- Format with fixed positions
+        local base_text = string.format('%-' .. column_width .. 's', 'Gil:')
+        local right_section = string.format('%6s%3d', increment_text, gil)  -- Reduced from 7,4 to 6,3
+        
+        text = text .. color_start .. base_text .. right_section .. '\\cr\n'
     end
     
     display:text(text)
+end
+
+-- Track recent increment
+local function track_increment(item_name, amount)
+    if recent_increments[item_name] then
+        -- If there's already a recent increment, add to it
+        local current_time = os.time()
+        if current_time - recent_increments[item_name].time <= GREEN_DURATION then
+            recent_increments[item_name].amount = recent_increments[item_name].amount + amount
+            recent_increments[item_name].time = current_time
+        else
+            recent_increments[item_name] = {amount = amount, time = current_time}
+        end
+    else
+        recent_increments[item_name] = {amount = amount, time = os.time()}
+    end
 end
 
 -- Normalize item name for consistent storage
@@ -311,6 +382,7 @@ local function remove_item(item_name)
         tracked_items[item_name] = nil
         item_counts[item_name] = nil
         item_drop_times[item_name] = nil  -- Clean up drop time
+        recent_increments[item_name] = nil  -- Clean up increment display
         windower.add_to_chat(207, 'Counter: Stopped tracking "' .. item_name .. '".')
         save_settings()
         update_display()
@@ -338,6 +410,7 @@ local function reset_item(item_name)
     if tracked_items[item_name] then
         item_counts[item_name] = 0
         item_drop_times[item_name] = nil  -- Clear color timer
+        recent_increments[item_name] = nil  -- Clear increment display
         windower.add_to_chat(207, 'Counter: Reset count for "' .. item_name .. '" to 0.')
         save_settings()
         update_display()
@@ -434,6 +507,7 @@ local function load_set(set_name)
     -- Clear current tracking
     tracked_items = {}
     item_drop_times = {}  -- Clear all color timers
+    recent_increments = {}  -- Clear all increment displays
     
     -- Load the set
     local count = 0
@@ -510,24 +584,10 @@ end
 
 -- Parse text for item drops
 local function check_for_drops(message, mode)
-    -- Skip our own messages and debug messages - CRITICAL: Must be at the very beginning
+    -- Skip our own messages and debug messages
     if message:find("^Counter:") or message:find("^DEBUG ALL:") or message:find("^Counter DEBUG:") then
         return
     end
-    
-    -- Clean up old processed messages periodically
-    local current_time = os.time()
-    if current_time > message_cleanup_time + 60 then
-        processed_messages = {}
-        message_cleanup_time = current_time
-    end
-    
-    -- Create a unique hash for this message to avoid duplicates
-    local message_hash = message .. tostring(mode) .. tostring(current_time)
-    if processed_messages[message_hash] then
-        return
-    end
-    processed_messages[message_hash] = true
     
     -- Try to get player name if we don't have it yet
     if not player_name then
@@ -577,6 +637,7 @@ local function check_for_drops(message, mode)
             personal_items[item_name] = true
             personal_counts[item_name] = (personal_counts[item_name] or 0) + 1
             personal_drop_times[item_name] = os.time()
+            track_increment(item_name, 1)
             windower.add_to_chat(207, 'Counter: Personal drop - ' .. item_name .. '! Total: ' .. personal_counts[item_name])
             save_settings()
             update_display()
@@ -617,6 +678,7 @@ local function check_for_drops(message, mode)
                     if gil_amount then
                         item_counts["Gil"] = (item_counts["Gil"] or 0) + gil_amount
                         item_drop_times["Gil"] = os.time()
+                        track_increment("Gil", gil_amount)
                         windower.add_to_chat(207, 'Counter: Gained ' .. gil_amount .. ' gil! Total: ' .. item_counts["Gil"])
                         save_settings()
                         update_display()
@@ -668,6 +730,7 @@ local function check_for_drops(message, mode)
                 if tracked_items[normalized_item] then
                     item_counts[normalized_item] = (item_counts[normalized_item] or 0) + 1
                     item_drop_times[normalized_item] = os.time()  -- Record drop time for color
+                    track_increment(normalized_item, 1)
                     windower.add_to_chat(207, 'Counter: ' .. normalized_item .. ' dropped! Total: ' .. item_counts[normalized_item])
                     save_settings()
                     update_display()
@@ -702,6 +765,13 @@ windower.register_event('time change', function()
     
     for item_name, drop_time in pairs(personal_drop_times) do
         if current_time - drop_time > GREEN_DURATION then
+            needs_update = true
+            break
+        end
+    end
+    
+    for item_name, increment_data in pairs(recent_increments) do
+        if current_time - increment_data.time > GREEN_DURATION then
             needs_update = true
             break
         end
@@ -852,12 +922,14 @@ windower.register_event('addon command', function(...)
                 if subcmd == 'reset' then
                     item_counts["Gil"] = 0
                     item_drop_times["Gil"] = nil
+                    recent_increments["Gil"] = nil
                     windower.add_to_chat(207, 'Counter: Gil reset to 0.')
                     save_settings()
                     update_display()
                 elseif subcmd == 'clear' then
                     item_counts["Gil"] = 0
                     item_drop_times["Gil"] = nil
+                    recent_increments["Gil"] = nil
                     windower.add_to_chat(207, 'Counter: Gil cleared.')
                     save_settings()
                     update_display()
@@ -876,6 +948,7 @@ windower.register_event('addon command', function(...)
                     for item in pairs(tracked_items) do
                         item_counts[item] = 0
                         item_drop_times[item] = nil
+                        recent_increments[item] = nil
                     end
                     windower.add_to_chat(207, 'Counter: All dropped item counts reset to 0.')
                     save_settings()
@@ -885,6 +958,7 @@ windower.register_event('addon command', function(...)
                     for item in pairs(tracked_items) do
                         item_counts[item] = nil
                         item_drop_times[item] = nil
+                        recent_increments[item] = nil
                     end
                     -- Then clear the tracked items
                     tracked_items = {}
@@ -934,6 +1008,7 @@ windower.register_event('addon command', function(...)
                     for item in pairs(personal_items) do
                         personal_counts[item] = 0
                         personal_drop_times[item] = nil
+                        recent_increments[item] = nil
                     end
                     windower.add_to_chat(207, 'Counter: All personal drop counts reset to 0.')
                     save_settings()
@@ -942,6 +1017,12 @@ windower.register_event('addon command', function(...)
                     personal_items = {}
                     personal_counts = {}
                     personal_drop_times = {}
+                    -- Clear increments for personal items
+                    for item, _ in pairs(recent_increments) do
+                        if personal_items[item] then
+                            recent_increments[item] = nil
+                        end
+                    end
                     windower.add_to_chat(207, 'Counter: Personal drops list cleared.')
                     save_settings()
                     update_display()
@@ -996,6 +1077,7 @@ windower.register_event('addon command', function(...)
             personal_items = {}
             personal_counts = {}
             personal_drop_times = {}
+            recent_increments = {}
             windower.add_to_chat(207, 'Counter: All lists cleared.')
             save_settings()
             update_display()
@@ -1006,13 +1088,16 @@ windower.register_event('addon command', function(...)
                 -- No item specified, reset all
                 item_counts["Gil"] = 0
                 item_drop_times["Gil"] = nil
+                recent_increments["Gil"] = nil
                 for item in pairs(tracked_items) do
                     item_counts[item] = 0
                     item_drop_times[item] = nil
+                    recent_increments[item] = nil
                 end
                 for item in pairs(personal_items) do
                     personal_counts[item] = 0
                     personal_drop_times[item] = nil
+                    recent_increments[item] = nil
                 end
                 windower.add_to_chat(207, 'Counter: All counters reset to 0.')
             else
@@ -1052,6 +1137,7 @@ windower.register_event('addon command', function(...)
                 personal_items[item_name] = true
                 personal_counts[item_name] = (personal_counts[item_name] or 0) + 1
                 personal_drop_times[item_name] = os.time()
+                track_increment(item_name, 1)
                 windower.add_to_chat(207, 'Counter: TEST - Added personal drop ' .. item_name .. '. Total: ' .. personal_counts[item_name])
                 save_settings()
                 update_display()
@@ -1062,6 +1148,7 @@ windower.register_event('addon command', function(...)
             if amount then
                 item_counts["Gil"] = (item_counts["Gil"] or 0) + amount
                 item_drop_times["Gil"] = os.time()
+                track_increment("Gil", amount)
                 windower.add_to_chat(207, 'Counter: TEST - Added ' .. amount .. ' gil. Total: ' .. item_counts["Gil"])
                 save_settings()
                 update_display()
@@ -1076,6 +1163,7 @@ windower.register_event('addon command', function(...)
                 if tracked_items[item_name] then
                     item_counts[item_name] = (item_counts[item_name] or 0) + 1
                     item_drop_times[item_name] = os.time()  -- Mark as recently dropped for color
+                    track_increment(item_name, 1)
                     windower.add_to_chat(207, 'Counter: TEST - Incremented ' .. item_name .. ' to ' .. item_counts[item_name])
                     save_settings()
                     update_display()
