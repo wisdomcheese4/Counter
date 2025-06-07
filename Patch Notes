@@ -1,0 +1,111 @@
+# Counter Addon Patch Notes
+
+## Version 1.0.1 (2025-06-07)
+
+### Bug Fixes
+
+**Fixed: Count Alignment Issue**
+- **Problem**: When increment indicators appeared (e.g., "+2"), the total count numbers would shift to the right, causing misalignment
+- **Solution**: Implemented fixed-width formatting with reserved space for increment indicators
+- **Result**: Count numbers now remain in consistent column positions regardless of increment display
+
+**Fixed: Display Width Issues**
+- **Problem**: Display window was unnecessarily wide, taking up too much screen space
+- **Solution**: Optimized all spacing and padding throughout the display
+- **Changes**:
+  - Reduced column padding from +2 to +1
+  - Changed divider lines from +10 to +8 width
+  - Adjusted right section from 7+4 to 6+3 character spacing
+  - Removed extra spacing from auto-add labels
+
+### New Features
+
+**Key Item Color Coding**
+- **Feature**: Items starting with "Key Item:" now display in blue color
+- **Behavior**: 
+  - Shows green for first 5 seconds (like all new items)
+  - Changes to blue instead of white after green period expires
+  - Blue color persists indefinitely for easy identification
+- **Color Value**: RGB(0,150,255) for clear visibility
+
+### User Interface Improvements
+
+**Optimized Display Layout**
+- More compact design while maintaining readability
+- Better use of horizontal space
+- Consistent alignment across all sections
+- Cleaner visual separation between categories
+
+**Enhanced Visual Consistency**
+- Improved alignment of ON/OFF indicators in auto-add section
+- Better spacing between section headers and content
+- More uniform padding throughout display elements
+
+### Technical Improvements
+
+**Code Optimization**
+- Refactored display update function for better performance
+- Improved color logic handling for different item states
+- More efficient string formatting for display elements
+- Better memory management for color timers
+
+**Formatting Standardization**
+- Consistent use of string.format for alignment
+- Standardized spacing calculations
+- Unified approach to column width handling
+
+---
+
+## Version 1.0.0 (2025-06-06)
+
+### Initial Release Features
+
+**Core Tracking System**
+- Implemented three-category item tracking system:
+  - **Item Drops**: Manual tracking for enemy drops with customizable item lists
+  - **Personal Drops**: Automatic tracking for items obtained from chests, NPCs, and quest rewards
+  - **Gil**: Automatic tracking for all gil gains
+- Real-time detection of items using FFXI chat message parsing
+- Separate counters for each category with independent management
+
+**Visual Display**
+- Created draggable on-screen display window with:
+  - Clean, organized layout with category sections
+  - Auto-adjusting column widths based on longest item name
+  - Color-coded status indicators (green=ON, red=OFF)
+  - Player name display showing who is being tracked
+- Visual feedback features:
+  - 5-second green highlight for recently obtained items
+  - Increment indicators showing recent gains (e.g., "+2")
+  - Automatic display refresh when items are obtained
+
+**Auto-Add Functionality**
+- Configurable automatic tracking for each category:
+  - Item Drops: OFF by default (manual tracking preferred)
+  - Personal Drops: ON by default (auto-tracks "Obtained:" messages)
+  - Gil: ON by default (always tracks gil gains)
+- Per-category toggle controls with visual status indicators
+
+**Set Management**
+- Save/load system for different farming configurations
+- Ability to save current drop list as named sets
+- Quick switching between different tracking setups
+- Set deletion functionality
+
+**Persistent Storage**
+- All data saved to local file (data/settings.lua)
+- Preserves counts between game sessions
+- Backward compatibility with future versions
+- Automatic loading on addon startup
+
+**Command System**
+- Comprehensive command structure with //counter and //cnt aliases
+- Category-specific commands (drop, personal, gil)
+- Individual item management (add, remove, reset)
+- Bulk operations (clear all, reset all)
+
+**Additional Features**
+- Debug mode for troubleshooting item detection
+- Test commands for manual incrementing
+- Show/hide display functionality
+- Extensive help system
