@@ -1,8 +1,8 @@
  Counter Addon for Windower
 
-**Version:** 1.0 
+**Version:** 1.0.1
 **Author:** wisdomcheese4  
-**Last Updated:** 2025-06-06
+**Last Updated:** 2025-06-07
 
 ## Overview
 
@@ -118,7 +118,3 @@ Save and load custom tracking lists:
 | Command | Description |
 |---------|-------------|
 | `//cnt help` | Show all available commands |
-
-## Usage Examples
-
-### Basic Tracking Setup
