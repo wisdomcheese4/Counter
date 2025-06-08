@@ -1,4 +1,4 @@
-# Counter v1.1.0 - FFXI Windower Addon
+# Counter v1.1.1 - FFXI Windower Addon
 
 A comprehensive item tracking addon for Final Fantasy XI that monitors drops, inventory, and various item categories with real-time updates and visual feedback.
 
