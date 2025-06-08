@@ -1,120 +1,121 @@
- Counter Addon for Windower
 
-**Version:** 1.0.1
-**Author:** wisdomcheese4  
-**Last Updated:** 2025-06-07
+### Display Elements Explained:
+- **Item Name** - The name of the tracked item
+- **(+/-)** - Recent increment/decrement (shows for 5 seconds)
+- **Number** - Total drops counted (not shown for usable/ammo)
+- **[Number]** - Current inventory count across all bags
 
-## Overview
+## Item Categories
 
-Counter is a comprehensive item tracking addon for Final Fantasy XI that monitors and counts item drops, personal drops (from chests/NPCs), and gil obtained during gameplay. It features persistent storage, customizable tracking lists, and a clean visual display with color-coded notifications.
+### 🟢 Item Drops (White)
+- Items dropped by defeated enemies
+- Shows both drop count and inventory count
+- Format: `ItemName (±change)DropCount[Inventory]`
 
-## Features
+### 🟣 Usable Items (Magenta)
+- Food items (type 7)
+- Items with "use" flags (medicines, tools)
+- Shows only inventory count
+- Format: `ItemName (±change)[Inventory]`
 
-- **Three Tracking Categories:**
-  - **Item Drops** - Enemy drops that you manually track
-  - **Personal Drops** - Items obtained from chests, NPCs, or quest rewards (auto-tracked)
-  - **Gil** - Automatically tracks gil obtained
-  
-- **Visual Display Window:**
-  - Draggable on-screen counter display
-  - Green highlighting for recently obtained items (5 seconds)
-  - Auto-adjusting column width for clean formatting
-  - Color-coded auto-add status indicators
+### 🟡 Equipped Ammo (Yellow)
+- Currently equipped stackable ammunition
+- Automatically detected and updated
+- Shows only inventory count
+- Format: `AmmoName (±change)[Inventory]`
 
-- **Persistent Storage:**
-  - All counts saved between sessions
-  - Customizable item sets for different activities
-  - Backward compatible with older versions
+### ⚪ Personal Drops (White)
+- Items from "Obtained:" messages
+- Treasure chests, quests, NPCs
+- Shows both obtained count and inventory
+- Format: `ItemName (±change)ObtainedCount[Inventory]`
 
-## Installation
+### 💰 Gil (White)
+- Total gil obtained during session
+- Shows cumulative total
+- Format: `Gil: (±change)Total`
 
-1. Download the `Counter.lua` file
-2. Place it in your Windower addons folder: `Windower/addons/Counter/`
-3. Load the addon in-game with: `//lua load counter`
-4. Add to autoload by editing `Windower/scripts/init.txt` and adding: `lua load counter`
+### 🔵 Key Items (Blue)
+- Special key items obtained
+- No inventory count (key items don't stack)
+- Format: `KeyItemName`
 
-## Commands
+## Auto-Add Behavior
 
-All commands can use either `//counter` or `//cnt` prefix.
+Each category has its own auto-add setting:
 
-### Basic Item Management
+- **Drops** (Default: OFF) - Automatically track items dropped from enemies
+- **Usable** (Default: ON) - Automatically categorize usable items
+- **Personal** (Default: ON) - Automatically track "Obtained:" items
+- **Gil** (Default: ON) - Always tracks gil when obtained
 
-| Command | Description |
-|---------|-------------|
-| `//cnt add <item name>` | Add an item to manual tracking list |
-| `//cnt remove <item name>` | Remove an item from tracking |
-| `//cnt list` | Display all tracked items in chat |
-| `//cnt clear` | Clear ALL lists (drops, personal, gil) |
-| `//cnt reset` | Reset ALL counters to 0 |
-| `//cnt reset <item name>` | Reset a specific item's count to 0 |
+## Special Features
 
-### Category-Specific Commands
+### Ammo Tracking
+- Automatically detects equipped ammo
+- Only tracks stackable ammo (stack > 1)
+- Updates when changing equipment or jobs
+- Cannot be manually added or removed
 
-#### Item Drops (Manual Tracking)
-| Command | Description |
-|---------|-------------|
-| `//cnt drop` | Show all tracked drops in chat |
-| `//cnt drop list` | List all tracked drops with counts |
-| `//cnt drop reset` | Reset all drop counts to 0 |
-| `//cnt drop clear` | Clear the entire drop list |
+### Inventory Monitoring
+- Checks all storage locations:
+  - Inventory, Safe, Storage, Locker
+  - Satchel, Sack, Case, Wardrobes 1-8
+- Updates every second
+- Shows decreases with red highlighting
 
-#### Personal Drops (Auto-Tracked from "Obtained:" messages)
-| Command | Description |
-|---------|-------------|
-| `//cnt personal` | Show all personal drops in chat |
-| `//cnt personal list` | List all personal drops with counts |
-| `//cnt personal reset` | Reset all personal drop counts to 0 |
-| `//cnt personal clear` | Clear the entire personal drops list |
+### Name Handling
+- Accepts both short and full item names
+- Example: "100 Byne Bill" or "One Hundred Byne Bill"
+- Automatically normalizes capitalization
 
-#### Gil Tracking
-| Command | Description |
-|---------|-------------|
-| `//cnt gil` | Show total gil obtained |
-| `//cnt gil reset` | Reset gil counter to 0 |
-| `//cnt gil clear` | Clear gil counter (same as reset) |
+### Data Persistence
+- Settings saved to: `Windower/addons/Counter/data/settings.lua`
+- Preserves tracked items between sessions
+- Auto-add preferences remembered
+- Item sets saved permanently
 
-### Auto-Add Settings
+## Tips & Tricks
 
-Control automatic tracking for each category:
+1. **Quick Setup**: Use `//cnt auto all on` to track everything automatically
+2. **Clean Display**: Use category-specific clear commands to remove unwanted items
+3. **Farming Sessions**: Create sets for different farming locations with `//cnt addset`
+4. **Inventory Management**: Red numbers show when items are being used/sold
+5. **Window Position**: Click and drag the display to your preferred location
 
-| Command | Description |
-|---------|-------------|
-| `//cnt auto` | Show auto-add status for all categories |
-| `//cnt auto drop on/off` | Toggle auto-add for enemy drops |
-| `//cnt auto personal on/off` | Toggle auto-add for personal drops |
-| `//cnt auto gil on/off` | Toggle auto-add for gil |
-| `//cnt auto all on/off` | Toggle all categories at once |
+## Troubleshooting
 
-### Set Management
+- **Items not tracking**: Check if auto-add is enabled for that category
+- **Wrong category**: Some items may need manual adding to correct category
+- **Display not updating**: Try `//cnt show` to refresh the display
+- **Ammo not showing**: Ensure ammo is equipped and stackable
 
-Save and load custom tracking lists:
+## Version History
 
-| Command | Description |
-|---------|-------------|
-| `//cnt addset <name>` | Save current drop list as a named set |
-| `//cnt set <name>` | Load a saved set |
-| `//cnt listsets` | List all saved sets |
-| `//cnt deleteset <name>` | Delete a saved set |
+### v1.1.0 (2025)
+- Added automatic equipped ammo tracking
+- Improved usable item detection with stricter criteria
+- Fixed draggable window functionality
+- Enhanced item categorization
+- Added increment/decrement indicators
+- Improved inventory monitoring across all bags
 
-### Display Controls
+### v1.0.0 (Initial Release)
+- Basic item tracking functionality
+- Multiple category support
+- Auto-add features
+- Set management
 
-| Command | Description |
-|---------|-------------|
-| `//cnt show` | Show the counter display window |
-| `//cnt hide` | Hide the counter display window |
+## Author
 
-### Debug Commands
+Created by **wisdomcheese4**  
+Version 1.1.0  
+For FFXI Windower
 
-| Command | Description |
-|---------|-------------|
-| `//cnt debug` | Toggle debug mode for obtained items |
-| `//cnt debugall` | Show ALL chat messages (very spammy!) |
-| `//cnt test <item>` | Manually increment a tracked item |
-| `//cnt testpersonal <item>` | Manually add a personal drop |
-| `//cnt testgil <amount>` | Manually add gil |
+## License
 
-### Help
+This addon is provided as-is for use with FFXI Windower. Feel free to modify and distribute.
 
-| Command | Description |
-|---------|-------------|
-| `//cnt help` | Show all available commands |
+---
+
+*Note: This addon tracks items during your current session. Drop counts reset when you reload the addon or restart the game, but tracked item lists are preserved.*
