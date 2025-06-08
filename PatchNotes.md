@@ -1,6 +1,6 @@
 # Counter Addon Patch Notes
 
-## Version 1.1.0 (2025-01-08)
+## Version 1.1.0 (2025-06-08)
 
 ### 🎯 Major Features
 
