@@ -1,5 +1,50 @@
 # Counter Addon Patch Notes
 
+# Counter v1.1.1 Patch Notes
+
+**Release Date:** June 8, 2025  
+**Author:** wisdomcheese4
+
+## 🐛 Bug Fixes
+
+### Fixed Steal Detection
+- **Issue:** When stealing items from enemies, the addon was incorrectly capturing the monster name along with the item name (e.g., "Maneating Hornet (Pot of Honey)" instead of just "Pot of Honey")
+- **Fix:** Improved pattern matching for steal messages to prioritize items in parentheses and better extract just the item name
+- **Impact:** Stolen items now display correctly in the tracking list with only their item names
+
+### Fixed Chat Message Color
+- **Issue:** Counter messages in the chat log were displaying in purple instead of the intended orange color
+- **Fix:** Corrected the color calculation to use the proper additive color method for FFXI chat system
+- **New Color:** RGB(255, 128, 0) - Bright orange
+- **Impact:** All Counter chat messages now display in a distinct bright orange color for better visibility
+
+## 🔧 Technical Details
+
+### Steal Pattern Matching Improvements
+- Added priority detection for items in parentheses format: `(Item Name)`
+- Improved fallback patterns to avoid capturing monster names
+- Better handling of various steal message formats from different game mods
+
+### Color System Update
+- Changed from incorrect color code (209) to proper additive calculation
+- Formula: `123 + (255 * 256³) + (128 * 256²) + (0 * 256)`
+- Ensures consistent bright orange display across all FFXI configurations
+
+## 📝 Version Summary
+- **Previous Version:** 1.1.0
+- **Current Version:** 1.1.1
+- **Type:** Bug Fix Release
+- **Compatibility:** No breaking changes, fully backward compatible with saved settings
+
+## 💡 User Impact
+- Steal functionality now works correctly with all stolen items
+- Improved readability with proper orange coloring in chat
+- No action required from users - fixes apply automatically upon update
+
+---
+
+*No new features were added in this release. This update focuses solely on fixing the steal detection and chat color issues reported by users.*
+
 ## Version 1.1.0 (2025-06-08)
 
 ### 🎯 Major Features
