@@ -130,12 +130,6 @@ All commands can use either `//counter` or `//cnt` prefix.
 | `//counter testpersonal <item>` | Test adding a personal drop |
 | `//counter testgil <amount>` | Test adding gil |
 
-## Display Format
-
-The on-screen display shows information in this format:
-
-Item Counter ───────────────────── Tracking: YourName Auto-add: Drop: OFF Usable: ON Personal: ON Gil: ON ───────────────────── Usable Items: Hi-Potion (+5)[120] Remedy [45] ───────────────────── Equipped Ammo: Shuriken (-10)[990] ───────────────────── Item Drops: Beehive Chip (+1)15[23] Silk Thread 8[156] ───────────────────── Personal Drops: Crystal: Fire (+1)3[45] Scroll of Cure 1[2] ───────────────────── Gil: (+100)2,450 ───────────────────── Key Items: Airship Pass
-
 Code
 
 ### Display Elements Explained:
